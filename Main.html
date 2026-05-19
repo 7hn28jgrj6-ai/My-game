@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pokemon Battle</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/* FIX RESTART BUTTON (override big menu buttons) */
+#winScreen button,
+#loseScreen button {
+    width: auto !important;
+    height: auto !important;
+
+    padding: 10px 16px;
+    font-size: 10px;
+
+    display: inline-block;
+}
+body {
+    font-family: 'Press Start 2P', monospace !important;
+}
+#dialogue {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #e0f8d0;
+}
+/* UI BOX (retro style) */
+#uiBox {
+    position: absolute;
+    bottom: -5px;
+    width: 100%;
+    height: 140px;
+    background: #0f380f;
+    border: 4px solid white;
+    padding: 10px;
+}
+
+.menu, .moves {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    height: 100%; /* fill UI */
+}
+
+button {
+    width: 100%;
+    height: 100%;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    padding: 12px;
+    background: #306230;
+    color: #e0f8d0;
+    border: 3px solid #0f380f;
+    border-radius: 0;
+}
+
+/* HOVER + SELECT */
+button:hover,
+.selected {
+    background: #e0f8d0 !important;
+    color: #0f380f !important;
+}
+
+/* HP BAR BORDER */
+.bar {
+    border: 2px solid white;
+}
+button {
+    padding: 10px;
+    background: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+/* SELECTED BUTTON */
+.selected {
+    background: white !important;
+    color: black !important;
+}
+body {
+    margin: 0;
+    background: #1e1e2f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: white;
+    font-family: Arial;
+}
+
+.game {
+    width: 90vw;           /* scales with screen width */
+    max-width: 900px;      /* prevents it from getting too huge */
+    aspect-ratio: 10 / 7;  /* keeps same proportions */
+    
+    position: relative;
+    background: linear-gradient(#88c070, #346856);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* SPRITES */
+.sprite {
+    position: absolute;
+    width: 120px;
+}
+
+.enemy { top: 40px; left: 60px; }
+.player { bottom: 150px; right: 60px; }
+
+/* SHAKE */
+.shake { animation: shake 0.2s; }
+@keyframes shake {
+    0% { transform: translate(0,0); }
+    25% { transform: translate(5px,-5px); }
+    50% { transform: translate(-5px,5px); }
+    75% { transform: translate(5px,5px); }
+    100% { transform: translate(0,0); }
+}
+
+/* HP */
+.pokemon { position: absolute; }
+.top-left { top: 10px; left: 10px; }
+.bottom-right { bottom: 140px; right: 10px; text-align: right; }
+
+.bar {
+    width: 180px;
+    height: 14px;
+    background: #444;
+    border-radius: 10px;
+}
+
+.fill { height: 100%; width: 100%; }
+
+/* UI */
+#uiBox {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%; /* stays inside .game */
+    height: 140px;
+    background: #0f380f;
+    border-top: 4px solid white; /* ONLY top border */
+    padding: 10px;
+    box-sizing: border-box; /* FIXES overflow */
+}
+
+.menu, .moves {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+button {
+    padding: 10px;
+    background: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.hidden { display: none; }
+
+/* END SCREENS */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0; /* ADD THIS */
+
+    width: 100%;
+    height: 100%;
+
+    background: #000c;
+
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+    text-align: center; /* ADD THIS */
+}
+
+.screen.active { display: flex; }
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+    <!-- SPRITES -->
+    <img id="enemySprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png" class="sprite enemy">
+    <img id="playerSprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/25.png" class="sprite player">
+
+    <!-- HP -->
+    <div class="pokemon top-left">
+        Squirtle
+        <div class="bar"><div id="enemyHP" class="fill"></div></div>
+        <div id="enemyText">HP: 100</div>
+    </div>
+
+    <div class="pokemon bottom-right">
+        Pikachu
+        <div class="bar"><div id="playerHP" class="fill"></div></div>
+        <div id="playerText">HP: 100</div>
+    </div>
+
+    <!-- UI -->
+    <div id="uiBox">
+        <div id="dialogue">A wild Squirtle appeared! Press ENTER</div>
+
+        <div id="mainMenu" class="menu hidden">
+            <button onclick="openFight()">Fight</button>
+            <button onclick="openBag()">Bag</button>
+            <button onclick="pokemon()">Pokemon</button>
+            <button onclick="run()">Run</button>
+        </div>
+
+        <div id="fightMenu" class="moves hidden">
+            <button onclick="attack('Thunder Shock',10)">Thunder Shock</button>
+            <button onclick="attack('Quick Attack',6)">Quick Attack</button>
+            <button onclick="attack('Iron Tail',12)">Iron Tail</button>
+            <button onclick="attack('Electro Ball',15)">Electro Ball</button>
+        </div>
+
+        <!-- BAG MENU -->
+        <div id="bagMenu" class="moves hidden">
+            <button onclick="usePotion()">Potion (1)</button>
+            <button onclick="useShield()">Shield (2)</button>
+            <button onclick="back()">Back</button>
+        </div>
+    </div>
+
+    <!-- WIN / LOSE -->
+    <div id="winScreen" class="screen">
+        <h1>You Win!</h1>
+        <button onclick="location.reload()">Restart</button>
+    </div>
+
+    <div id="loseScreen" class="screen">
+        <h1>You Lose!</h1>
+        <button onclick="location.reload()">Restart</button>
+    </div>
+
+</div>
+
+<script>
+let lastSpoken = "";
+let speakTimeout;
+let playerHP = 100;
+let enemyHP = 100;
+let started = false;
+let waiting = false;
+let enemyWaiting = false;
+let potions = 1;
+let shields = 2;
+let shieldActive = false;
+
+let currentMenu = "main";
+let selectedIndex = 0;
+
+function speak(text) {
+    let msg = new SpeechSynthesisUtterance(text);
+    msg.rate = 1;
+    msg.pitch = 1;
+    speechSynthesis.cancel(); // stop overlapping
+    speechSynthesis.speak(msg);
+}
+
+/* BUTTON MAPS */
+const menus = {
+    main: ["Fight","Bag","Pokemon","Run"],
+    fight: ["Thunder Shock","Quick Attack","Iron Tail","Electro Ball"],
+    bag: ["Potion","Shield","Back"]
+};
+
+/* UPDATE */
+function update() {
+    let p = playerHP = Math.max(0, playerHP);
+    let e = enemyHP = Math.max(0, enemyHP);
+
+    playerHP = p; enemyHP = e;
+
+    let pb = playerHP;
+    let eb = enemyHP;
+
+    playerHP = pb; enemyHP = eb;
+
+    playerHP = Math.max(0, playerHP);
+    enemyHP = Math.max(0, enemyHP);
+
+    let pBar = document.getElementById("playerHP");
+    let eBar = document.getElementById("enemyHP");
+
+    pBar.style.width = playerHP + "%";
+    eBar.style.width = enemyHP + "%";
+
+    function color(hp){
+        if(hp<=33)return"red";
+        if(hp<=50)return"orange";
+        return"limegreen";
+    }
+
+    pBar.style.background = color(playerHP);
+    eBar.style.background = color(enemyHP);
+
+    document.getElementById("playerText").innerText = "HP: " + playerHP;
+    document.getElementById("enemyText").innerText = "HP: " + enemyHP;
+
+    updateBagText();
+}
+
+/* UPDATE BAG COUNTS */
+function updateBagText(){
+    document.querySelector("#bagMenu button:nth-child(1)").innerText = `Potion (${potions})`;
+    document.querySelector("#bagMenu button:nth-child(2)").innerText = `Shield (${shields})`;
+}
+
+/* DIALOGUE */
+function setDialogue(text){
+    dialogue.classList.remove("hidden");
+    dialogue.innerText = text;
+
+    mainMenu.classList.add("hidden");
+    fightMenu.classList.add("hidden");
+    bagMenu.classList.add("hidden");
+
+    waiting = true;
+}
+
+function showMenu(){
+    dialogue.classList.add("hidden");
+    mainMenu.classList.remove("hidden");
+    currentMenu = "main";
+    selectedIndex = 0;
+    highlight();
+    waiting = false;
+    speak("Your four options are Attack, Bag, Pokemon, Run. Press arrow keys to show currently selected option.");
+}
+
+/* KEY CONTROLS */
+document.addEventListener("keydown", e => {
+
+    if(enemyWaiting) return;
+
+    if(e.key === "Enter"){
+        if(!started){started=true;showMenu();return;}
+        if(waiting){showMenu();return;}
+        activate();
+    }
+
+    if(waiting) return;
+
+    if(e.key === "ArrowRight" || e.key === "ArrowDown"){
+        selectedIndex++;
+    }
+
+    if(e.key === "ArrowLeft" || e.key === "ArrowUp"){
+        selectedIndex--;
+    }
+
+    let max = menus[currentMenu].length;
+    if(selectedIndex < 0) selectedIndex = max-1;
+    if(selectedIndex >= max) selectedIndex = 0;
+
+    highlight();
+});
+
+/* HIGHLIGHT */
+function highlight(){
+    let container = getMenuElement();
+    if(!container) return;
+    let buttons = container.querySelectorAll("button");
+
+    buttons.forEach(b => b.classList.remove("selected"));
+
+    if(buttons[selectedIndex]){
+        buttons[selectedIndex].classList.add("selected");
+    }
+
+    let option = menus[currentMenu][selectedIndex];
+
+    if(lastSpoken !== option){
+        lastSpoken = option;
+
+        clearTimeout(speakTimeout);
+        speakTimeout = setTimeout(() => {
+            speak("Your currently selected option is " + option);
+        }, 150);
+    }
+}
+
+function getMenuElement(){
+    if(currentMenu==="main") return mainMenu;
+    if(currentMenu==="fight") return fightMenu;
+    if(currentMenu==="bag") return bagMenu;
+}
+
+/* ACTIVATE BUTTON */
+function activate(){
+    let option = menus[currentMenu][selectedIndex];
+
+    if(currentMenu==="main"){
+        if(option==="Fight") openFight();
+        if(option==="Bag") openBag();
+        if(option==="Pokemon") pokemon();
+        if(option==="Run") run();
+    }
+
+    else if(currentMenu==="fight"){
+        let moves = {
+            "Thunder Shock":10,
+            "Quick Attack":6,
+            "Iron Tail":12,
+            "Electro Ball":15
+        };
+        attack(option, moves[option]);
+    }
+
+    else if(currentMenu==="bag"){
+        if(option==="Potion") usePotion();
+        if(option==="Shield") useShield();
+        if(option==="Back") back();
+    }
+}
+
+/* MENUS */
+function openFight(){
+    mainMenu.classList.add("hidden");
+    fightMenu.classList.remove("hidden");
+    currentMenu="fight"; selectedIndex=0; highlight();
+}
+
+function openBag(){
+    mainMenu.classList.add("hidden");
+    bagMenu.classList.remove("hidden");
+    currentMenu="bag"; selectedIndex=0; highlight();
+}
+
+function back(){
+    fightMenu.classList.add("hidden");
+    bagMenu.classList.add("hidden");
+    mainMenu.classList.remove("hidden");
+    currentMenu="main"; selectedIndex=0; highlight();
+}
+
+function pokemon(){ setDialogue("No other Pokémon."); }
+function run(){ loseScreen.classList.add("active"); }
+
+/* ITEMS */
+function usePotion(){
+    if(potions<=0){setDialogue("No potions left!");return;}
+    potions--;
+    playerHP = Math.min(100, playerHP+15);
+    update();
+    setDialogue("You healed 15 HP!");
+    enemyNext();
+}
+
+function useShield(){
+    if(shields<=0){setDialogue("No shields left!");return;}
+    shields--;
+    shieldActive = true;
+    update();
+    setDialogue("You will take half damage next turn!");
+    enemyNext();
+}
+
+/* SHAKE */
+function shake(id){
+    let el=document.getElementById(id);
+    el.classList.add("shake");
+    setTimeout(()=>el.classList.remove("shake"),200);
+}
+
+/* ATTACK */
+function attack(name,dmg){
+    enemyHP-=dmg;
+    shake("enemySprite");
+    update();
+
+    setDialogue(`You hit Squirtle with ${name} for ${dmg} damage!`);
+    speak(`You used ${name}. Squirtle took ${dmg} damage and has ${enemyHP} HP left.`);
+    if(enemyHP<=0){
+        setTimeout(()=>winScreen.classList.add("active"),300);
+        return;
+    }
+
+    enemyNext();
+}
+
+/* ENEMY */
+function enemyNext(){
+    enemyWaiting = true;
+
+    document.addEventListener("keydown", function handler(e){
+        if(e.key === "Enter"){
+            enemyWaiting = false;
+            enemyTurn();
+        }
+    }, {once:true});
+}
+
+function enemyTurn(){
+    let moves=[["Water Gun",8],["Bubble",6],["Tackle",5],["Aqua Tail",10]];
+    let move=moves[Math.floor(Math.random()*moves.length)];
+    let dmg = move[1];
+
+    if(shieldActive){
+        dmg = Math.floor(dmg/2);
+        shieldActive=false;
+    }
+
+    playerHP-=dmg;
+    shake("playerSprite");
+    update();
+
+    setDialogue(`Squirtle hit you with ${move[0]} for ${dmg} damage!`);
+    speak(`Squirtle used ${move[0]}. You took ${dmg} damage and have ${playerHP} HP left.`);
+
+    if(playerHP<=0){
+        setTimeout(()=>loseScreen.classList.add("active"),300);
+    }
+    setTimeout(() => {
+        waiting = true;
+    }, 100);
+
+
+}
+
+update();
+updateBagText();
+
+</script>
+</body>
+</html>
