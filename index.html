@@ -689,25 +689,44 @@ function back(){
 function pokemon(){ setDialogue("No other Pokémon."); }
 function run(){ loseScreen.classList.add("active"); }
 
-/* ITEMS */
-function usePotion(){
-    if(potions<=0){setDialogue("No potions left!");return;}
-    potions--;
-    playerHP = Math.min(100, playerHP+15);
-    update();
-    setDialogue("You healed 15 HP!");
-    enemyNext();
-}
-
 function useShield(){
-    if(shields<=0){setDialogue("No shields left!");return;}
+    if(shields <= 0){
+        setDialogue("No shields left!");
+        speak("No shields left.");
+        return;
+    }
+
     shields--;
     shieldActive = true;
     update();
-    setDialogue("You will take half damage next turn!");
+
+    let msg = "You used a Shield. You will take half damage on the next enemy attack.";
+
+    setDialogue(msg);
+    speak(msg);
+
     enemyNext();
 }
 
+function usePotion(){
+    if(potions <= 0){
+        setDialogue("No potions left!");
+        speak("No potions left.");
+        return;
+    }
+
+    potions--;
+    playerHP = Math.min(100, playerHP + 15);
+    update();
+
+    let msg = `You used a Potion. You recovered 15 HP. Current HP is ${playerHP}.`;
+
+    setDialogue(msg);
+    speak(msg);
+
+    enemyNext();
+}
+    
 /* SHAKE */
 function shake(id){
     let el=document.getElementById(id);
