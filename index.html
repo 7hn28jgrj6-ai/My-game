@@ -356,6 +356,8 @@ let selectedIndex = 0;
 const mainMenu = document.getElementById("mainMenu");
 const fightMenu = document.getElementById("fightMenu");
 const bagMenu = document.getElementById("bagMenu");
+const winScreen = document.getElementById("winScreen");
+const loseScreen = document.getElementById("loseScreen");
 
 function speak(text) {
     let msg = new SpeechSynthesisUtterance(text);
@@ -641,6 +643,7 @@ function getMenuElement(){
 
 /* ACTIVATE BUTTON */
 function activate(){
+
     let option = menus[currentMenu][selectedIndex];
 
     if(currentMenu==="main"){
@@ -651,10 +654,8 @@ function activate(){
     }
 
     else if(currentMenu==="fight"){
-    let move = playerPokemon.moves[selectedIndex];
-    attack(move.name, move.dmg);
-}
-        attack(option, moves[option]);
+        let move = playerPokemon.moves[selectedIndex];
+        attack(move.name, move.dmg);
     }
 
     else if(currentMenu==="bag"){
