@@ -226,13 +226,13 @@ button {
 
     <!-- HP -->
     <div class="pokemon top-left">
-        Squirtle
+        <span id="enemyName">Enemy</span>
         <div class="bar"><div id="enemyHP" class="fill"></div></div>
         <div id="enemyText">HP: 100</div>
     </div>
 
     <div class="pokemon bottom-right">
-        Pikachu
+        <span id="playerName">Player</span>
         <div class="bar"><div id="playerHP" class="fill"></div></div>
         <div id="playerText">HP: 100</div>
     </div>
@@ -292,6 +292,8 @@ let enemyPokemon = null;
 let gameState = "playerSelect";
 let selectIndex = 0;
 const dialogue = document.getElementById("dialogue");
+const playerNameUI = document.getElementById("playerName");
+const enemyNameUI = document.getElementById("enemyName");
 let enterConfirm = false;
 let lastSpoken = "";
 let speakTimeout;
@@ -534,6 +536,7 @@ function highlight(){
         }, 150);
     }
 }   
+    
 function startBattle(){
 
     gameState="battle";
@@ -541,16 +544,29 @@ function startBattle(){
     document.getElementById("selectionScreen")
         .classList.remove("active");
 
+    /* SET SPRITES */
     document.getElementById("playerSprite").src=
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${playerPokemon.id}.png`;
 
     document.getElementById("enemySprite").src=
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemyPokemon.id}.png`;
 
-    dialogue.innerText=
-    `A wild ${enemyPokemon.name} appeared! Press ENTER`;
+    /* SET HEALTH BAR NAMES */
+    playerNameUI.innerText = playerPokemon.name;
+    enemyNameUI.innerText = enemyPokemon.name;
 
-    speak(`A wild ${enemyPokemon.name} appeared.`);
+    /* RESET HP */
+    playerHP = 100;
+    enemyHP = 100;
+    update();
+
+    /* SCREEN READER */
+    let intro =
+        `A wild ${enemyPokemon.name} appeared. ` +
+        `You sent out ${playerPokemon.name}. Press Enter.`;
+
+    dialogue.innerText = intro;
+    speak(intro);
 }
     
 function getMenuElement(){
@@ -642,8 +658,8 @@ function attack(name,dmg){
     shake("enemySprite");
     update();
 
-    setDialogue(`You hit Squirtle with ${name} for ${dmg} damage!`);
-    speak(`You used ${name}. Squirtle took ${dmg} damage and has ${enemyHP} HP left.`);
+    setDialogue(`You hit ${enemyPokemon.name} with ${name} for ${dmg} damage!`);
+    speak(`${playerPokemon.name} used ${name}. ${enemyPokemon.name} took ${dmg} damage and has ${enemyHP} HP left.`);
     if(enemyHP<=0){
         setTimeout(()=>winScreen.classList.add("active"),300);
         return;
@@ -678,8 +694,8 @@ function enemyTurn(){
     shake("playerSprite");
     update();
 
-    setDialogue(`Squirtle hit you with ${move[0]} for ${dmg} damage!`);
-    speak(`Squirtle used ${move[0]}. You took ${dmg} damage and have ${playerHP} HP left.`);
+    setDialogue(`${enemyPokemon.name} hit you with ${move[0]} for ${dmg} damage!`);
+    speak(`${enemyPokemon.name} used ${move[0]}. ${playerPokemon.name} has ${playerHP} HP left.`);
 
     if(playerHP<=0){
         setTimeout(()=>loseScreen.classList.add("active"),300);
