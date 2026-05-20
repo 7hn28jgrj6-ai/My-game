@@ -271,7 +271,13 @@ button {
 
 </div>
 
-<script>
+<script
+
+// GAME STATES
+let gameState = "tutorial";
+let tutorialStep = 0;
+let tutorialDone = false;
+    
 /* SELECTABLE POKEMON */
 const selectablePokemon = [
 {
@@ -524,12 +530,29 @@ function showMenu(){
     selectedIndex = 0;
     highlight();
     waiting = false;
-    speak("Your four options are Attack, Bag, Pokemon, Run. Press arrow keys to show currently selected option.");
 }
 
+function runTutorial() {
+
+    if (tutorialDone) return;
+
+    tutorialDone = true;
+
+    const tutorialText =
+        "Welcome to Pokémon Battle. " +
+        "You will first choose your Pokémon. " +
+        "Use arrow keys to move between Pokémon. " +
+        "Press Enter to select one. " +
+        "Press Enter again to confirm. " +
+        "Then choose your opponent and begin battle.";
+
+    speak(tutorialText);
+}
+    
 /* KEY CONTROLS */
 document.addEventListener("keydown", e => {
-    /* SELECTION SCREEN CONTROLS */
+// BLOCK INPUT UNTIL TUTORIAL FINISHES
+if (!tutorialDone) return;
     if(gameState !== "battle"){
 
         let max=selectablePokemon.length;
@@ -781,7 +804,7 @@ ${playerPokemon.name} has ${playerHP} HP left.`
 
 
 }
-
+runTutorial();
 update();
 buildSelectionGrid();
 speak("Choose your Pokémon. Press enter twice to confirm.");
