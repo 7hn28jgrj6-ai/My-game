@@ -274,10 +274,6 @@ button {
 <script>
 
 // GAME STATES
-let gameState = "tutorial";
-let tutorialStep = 0;
-let tutorialDone = false;
-    
 /* SELECTABLE POKEMON */
 const selectablePokemon = [
 {
@@ -355,7 +351,7 @@ let enemyWaiting = false;
 let potions = 1;
 let shields = 2;
 let shieldActive = false;
-
+let gameState = "playerSelect";
 let currentMenu = "main";
 let selectedIndex = 0;
 const mainMenu = document.getElementById("mainMenu");
