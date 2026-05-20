@@ -291,6 +291,7 @@ let enemyPokemon = null;
 
 let gameState = "playerSelect";
 let selectIndex = 0;
+const dialogue = document.getElementById("dialogue");
 let enterConfirm = false;
 let lastSpoken = "";
 let speakTimeout;
@@ -305,6 +306,9 @@ let shieldActive = false;
 
 let currentMenu = "main";
 let selectedIndex = 0;
+const mainMenu = document.getElementById("mainMenu");
+const fightMenu = document.getElementById("fightMenu");
+const bagMenu = document.getElementById("bagMenu");
 
 function speak(text) {
     let msg = new SpeechSynthesisUtterance(text);
@@ -472,8 +476,9 @@ document.addEventListener("keydown", e => {
         if(selectIndex<0) selectIndex=max-1;
         if(selectIndex>=max) selectIndex=0;
 
-        highlightSelection();
-
+        if(["ArrowRight","ArrowLeft","ArrowUp","ArrowDown"].includes(e.key)){
+    highlightSelection();
+}
         if(e.key==="Enter"){
             choosePokemon();
         }
@@ -528,18 +533,7 @@ function highlight(){
             speak("Your currently selected option is " + option);
         }, 150);
     }
-}
-
-    if(!playerPokemon) return;
-
-    gameState="enemySelect";
-
-    document.getElementById("selectTitle")
-        .innerText="Choose Opponent Pokémon";
-
-    speak("Choose opponent Pokémon.");
-};
-    
+}   
 function startBattle(){
 
     gameState="battle";
