@@ -219,8 +219,6 @@ button {
 
     <div id="pokemonGrid" class="pokemon-grid"></div>
 
-    <button id="readyButton">READY</button>
-
 </div>
     <!-- SPRITES -->
     <img id="enemySprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png" class="sprite enemy">
@@ -293,7 +291,7 @@ let enemyPokemon = null;
 
 let gameState = "playerSelect";
 let selectIndex = 0;
-
+let enterConfirm = false;
 let lastSpoken = "";
 let speakTimeout;
 let playerHP = 100;
@@ -336,7 +334,7 @@ function buildSelectionGrid(){
     highlightSelection();
 }
 function highlightSelection(){
-
+    enterConfirm = false;
     let choices=document.querySelectorAll(".pokeChoice");
 
     choices.forEach(c=>c.classList.remove("selected"));
@@ -349,19 +347,45 @@ function highlightSelection(){
 
 function choosePokemon(){
 
-    let chosen=selectablePokemon[selectIndex];
+    let chosen = selectablePokemon[selectIndex];
 
-    if(gameState==="playerSelect"){
-        playerPokemon=chosen;
-        speak("You chose "+chosen.name+". Press ready.");
+    /* FIRST ENTER = announce choice */
+    if(!enterConfirm){
+        enterConfirm = true;
+
+        speak("Selected " + chosen.name +
+              ". Press enter again to confirm.");
+
+        return;
     }
 
-    else if(gameState==="enemySelect"){
-        enemyPokemon=chosen;
-        speak("Opponent chose "+chosen.name+". Starting battle.");
+    /* SECOND ENTER = confirm */
+    enterConfirm = false;
+
+    if(gameState === "playerSelect"){
+
+        playerPokemon = chosen;
+
+        speak("You chose " + chosen.name +
+              ". Now choose opponent Pokémon.");
+
+        gameState = "enemySelect";
+
+        document.getElementById("selectTitle")
+            .innerText = "Choose Opponent Pokémon";
+    }
+
+    else if(gameState === "enemySelect"){
+
+        enemyPokemon = chosen;
+
+        speak("Opponent chose " + chosen.name +
+              ". Starting battle.");
+
         startBattle();
     }
 }
+    
 /* BUTTON MAPS */
 const menus = {
     main: ["Fight","Bag","Pokemon","Run"],
@@ -505,8 +529,6 @@ function highlight(){
         }, 150);
     }
 }
-
-document.getElementById("readyButton").onclick=()=>{
 
     if(!playerPokemon) return;
 
@@ -677,7 +699,7 @@ function enemyTurn(){
 
 update();
 buildSelectionGrid();
-speak("Choose your Pokémon.");
+speak("Choose your Pokémon. Press enter twice to confirm.");
 updateBagText();
 
 </script>
