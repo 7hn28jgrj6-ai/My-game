@@ -526,29 +526,10 @@ function showMenu(){
     highlight();
     waiting = false;
 }
-
-function runTutorial() {
-
-    if (tutorialDone) return;
-
-    tutorialDone = true;
-
-    const tutorialText =
-        "Welcome to Pokémon Battle. " +
-        "You will first choose your Pokémon. " +
-        "Use arrow keys to move between Pokémon. " +
-        "Press Enter to select one. " +
-        "Press Enter again to confirm. " +
-        "Then choose your opponent and begin battle.";
-
-    speak(tutorialText);
-}
     
 /* KEY CONTROLS */
 document.addEventListener("keydown", e => {
 // BLOCK INPUT UNTIL TUTORIAL FINISHES
-if (!tutorialDone) return;
-    if (gameState === "tutorial") return;
 
         let max=selectablePokemon.length;
 
