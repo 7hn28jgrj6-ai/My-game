@@ -17,6 +17,27 @@
 
     display: inline-block;
 }
+.pokemon-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+    margin:20px;
+}
+
+.pokeChoice{
+    background:#306230;
+    border:3px solid white;
+    padding:10px;
+}
+
+.pokeChoice.selected{
+    background:#e0f8d0;
+    color:black;
+}
+
+.pokeChoice img{
+    width:80px;
+}
 body {
     font-family: 'Press Start 2P', monospace !important;
 }
@@ -191,7 +212,16 @@ button {
 <body>
 
 <div class="game">
+<!-- POKEMON SELECTION SCREEN -->
+<div id="selectionScreen" class="screen active">
 
+    <h2 id="selectTitle">Choose Your Pokémon</h2>
+
+    <div id="pokemonGrid" class="pokemon-grid"></div>
+
+    <button id="readyButton">READY</button>
+
+</div>
     <!-- SPRITES -->
     <img id="enemySprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png" class="sprite enemy">
     <img id="playerSprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/25.png" class="sprite player">
@@ -249,6 +279,21 @@ button {
 </div>
 
 <script>
+/* SELECTABLE POKEMON */
+const selectablePokemon = [
+ {name:"Pikachu", id:25},
+ {name:"Charmander", id:4},
+ {name:"Bulbasaur", id:1},
+ {name:"Squirtle", id:7},
+ {name:"Eevee", id:133}
+];
+
+let playerPokemon = null;
+let enemyPokemon = null;
+
+let gameState = "playerSelect";
+let selectIndex = 0;
+
 let lastSpoken = "";
 let speakTimeout;
 let playerHP = 100;
@@ -271,6 +316,52 @@ function speak(text) {
     speechSynthesis.speak(msg);
 }
 
+function buildSelectionGrid(){
+
+    const grid=document.getElementById("pokemonGrid");
+    grid.innerHTML="";
+
+    selectablePokemon.forEach(p=>{
+
+        let div=document.createElement("div");
+        div.className="pokeChoice";
+
+        div.innerHTML=
+        `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png">
+         <div>${p.name}</div>`;
+
+        grid.appendChild(div);
+    });
+
+    highlightSelection();
+}
+function highlightSelection(){
+
+    let choices=document.querySelectorAll(".pokeChoice");
+
+    choices.forEach(c=>c.classList.remove("selected"));
+
+    if(choices[selectIndex]){
+        choices[selectIndex].classList.add("selected");
+        speak(selectablePokemon[selectIndex].name);
+    }
+}
+
+function choosePokemon(){
+
+    let chosen=selectablePokemon[selectIndex];
+
+    if(gameState==="playerSelect"){
+        playerPokemon=chosen;
+        speak("You chose "+chosen.name+". Press ready.");
+    }
+
+    else if(gameState==="enemySelect"){
+        enemyPokemon=chosen;
+        speak("Opponent chose "+chosen.name+". Starting battle.");
+        startBattle();
+    }
+}
 /* BUTTON MAPS */
 const menus = {
     main: ["Fight","Bag","Pokemon","Run"],
@@ -344,6 +435,27 @@ function showMenu(){
 
 /* KEY CONTROLS */
 document.addEventListener("keydown", e => {
+    /* SELECTION SCREEN CONTROLS */
+    if(gameState !== "battle"){
+
+        let max=selectablePokemon.length;
+
+        if(e.key==="ArrowRight") selectIndex++;
+        if(e.key==="ArrowLeft") selectIndex--;
+        if(e.key==="ArrowDown") selectIndex+=3;
+        if(e.key==="ArrowUp") selectIndex-=3;
+
+        if(selectIndex<0) selectIndex=max-1;
+        if(selectIndex>=max) selectIndex=0;
+
+        highlightSelection();
+
+        if(e.key==="Enter"){
+            choosePokemon();
+        }
+
+        return; // stop battle controls
+}
 
     if(enemyWaiting) return;
 
@@ -394,6 +506,37 @@ function highlight(){
     }
 }
 
+document.getElementById("readyButton").onclick=()=>{
+
+    if(!playerPokemon) return;
+
+    gameState="enemySelect";
+
+    document.getElementById("selectTitle")
+        .innerText="Choose Opponent Pokémon";
+
+    speak("Choose opponent Pokémon.");
+};
+    
+function startBattle(){
+
+    gameState="battle";
+
+    document.getElementById("selectionScreen")
+        .classList.remove("active");
+
+    document.getElementById("playerSprite").src=
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${playerPokemon.id}.png`;
+
+    document.getElementById("enemySprite").src=
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemyPokemon.id}.png`;
+
+    dialogue.innerText=
+    `A wild ${enemyPokemon.name} appeared! Press ENTER`;
+
+    speak(`A wild ${enemyPokemon.name} appeared.`);
+}
+    
 function getMenuElement(){
     if(currentMenu==="main") return mainMenu;
     if(currentMenu==="fight") return fightMenu;
@@ -533,6 +676,8 @@ function enemyTurn(){
 }
 
 update();
+buildSelectionGrid();
+speak("Choose your Pokémon.");
 updateBagText();
 
 </script>
