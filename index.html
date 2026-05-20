@@ -525,49 +525,56 @@ function showMenu(){
     
 /* KEY CONTROLS */
 document.addEventListener("keydown", e => {
-// BLOCK INPUT UNTIL TUTORIAL FINISHES
 
-        let max=selectablePokemon.length;
+    let max = selectablePokemon.length;
 
-        if(e.key==="ArrowRight") selectIndex++;
-        if(e.key==="ArrowLeft") selectIndex--;
-        if(e.key==="ArrowDown") selectIndex+=3;
-        if(e.key==="ArrowUp") selectIndex-=3;
+    // --- POKEMON SELECT ---
+    if (gameState === "playerSelect" || gameState === "enemySelect") {
 
-        if(selectIndex<0) selectIndex=max-1;
-        if(selectIndex>=max) selectIndex=0;
+        if (e.key === "ArrowRight") selectIndex++;
+        if (e.key === "ArrowLeft") selectIndex--;
+        if (e.key === "ArrowDown") selectIndex += 3;
+        if (e.key === "ArrowUp") selectIndex -= 3;
 
-        if(["ArrowRight","ArrowLeft","ArrowUp","ArrowDown"].includes(e.key)){
-    highlightSelection();
-}
-        if(e.key==="Enter"){
+        if (selectIndex < 0) selectIndex = max - 1;
+        if (selectIndex >= max) selectIndex = 0;
+
+        if (["ArrowRight","ArrowLeft","ArrowUp","ArrowDown"].includes(e.key)) {
+            highlightSelection();
+        }
+
+        if (e.key === "Enter") {
             choosePokemon();
         }
 
-        return; // stop battle controls
-}
+        return;
+    }
 
-    if(enemyWaiting) return;
+    // --- ENEMY WAIT BLOCK ---
+    if (enemyWaiting) return;
 
-    if(e.key === "Enter"){
-        if(!started){started=true;showMenu();return;}
-        if(waiting){showMenu();return;}
+    // --- MAIN GAME START ---
+    if (e.key === "Enter") {
+        if (!started) {
+            started = true;
+            showMenu();
+            return;
+        }
+        if (waiting) {
+            showMenu();
+            return;
+        }
         activate();
     }
 
-    if(waiting) return;
+    if (waiting) return;
 
-    if(e.key === "ArrowRight" || e.key === "ArrowDown"){
-        selectedIndex++;
-    }
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") selectedIndex++;
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") selectedIndex--;
 
-    if(e.key === "ArrowLeft" || e.key === "ArrowUp"){
-        selectedIndex--;
-    }
-
-    let max = menus[currentMenu].length;
-    if(selectedIndex < 0) selectedIndex = max-1;
-    if(selectedIndex >= max) selectedIndex = 0;
+    let menuMax = menus[currentMenu].length;
+    if (selectedIndex < 0) selectedIndex = menuMax - 1;
+    if (selectedIndex >= menuMax) selectedIndex = 0;
 
     highlight();
 });
@@ -776,7 +783,7 @@ ${playerPokemon.name} has ${playerHP} HP left.`
 
 
 }
-runTutorial();
+    
 update();
 buildSelectionGrid();
 speak("Choose your Pokémon. Press enter twice to confirm.");
