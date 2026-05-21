@@ -761,9 +761,8 @@ ${enemyPokemon.name} has ${enemyHP} HP left.`
     if(enemyHP <= 0){
 
     gameOver = true;
-
-    speak("You won the game!");
     speechSynthesis.cancel();
+    speak("You won the game!");
     setTimeout(() => {
         winScreen.classList.add("active");
     }, 300);
