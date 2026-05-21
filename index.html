@@ -348,6 +348,7 @@ let potions = 1;
 let shields = 2;
 let shieldActive = false;
 let gameState = "playerSelect";
+let gameOver = false;
 let currentMenu = "main";
 let selectedIndex = 0;
 const mainMenu = document.getElementById("mainMenu");
@@ -526,7 +527,7 @@ function showMenu(){
     
 /* KEY CONTROLS */
 document.addEventListener("keydown", e => {
-
+    if(gameOver) return;
     let max = selectablePokemon.length;
 
     // --- POKEMON SELECT ---
@@ -757,10 +758,18 @@ speak(
 `${playerPokemon.name} used ${name}.
 ${enemyPokemon.name} has ${enemyHP} HP left.`
 );
-    if(enemyHP<=0){
-        setTimeout(()=>winScreen.classList.add("active"),300);
-        return;
-    }
+    if(enemyHP <= 0){
+
+    gameOver = true;
+
+    speak("You won the game!");
+    speechSynthesis.cancel();
+    setTimeout(() => {
+        winScreen.classList.add("active");
+    }, 300);
+
+    return;
+}
 
     enemyNext();
 }
@@ -796,12 +805,18 @@ speak(
 ${playerPokemon.name} has ${playerHP} HP left.`
 );
 
-    if(playerHP<=0){
-        setTimeout(()=>loseScreen.classList.add("active"),300);
-    }
+    if(playerHP <= 0){
+
+    gameOver = true;
+    speechSynthesis.cancel();
+    speak("You lost the game!");
+
     setTimeout(() => {
-        waiting = true;
-    }, 100);
+        loseScreen.classList.add("active");
+    }, 300);
+
+    return;
+}
 
 
 }
