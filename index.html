@@ -552,7 +552,15 @@ document.addEventListener("keydown", e => {
     }
 
     // --- ENEMY WAIT BLOCK ---
-    if (enemyWaiting) return;
+    if(enemyWaiting){
+
+    if(e.key === "Enter"){
+        enemyWaiting = false;
+        enemyTurn();
+    }
+
+    return;
+}
 
     // --- MAIN GAME START ---
     if (e.key === "Enter") {
@@ -760,14 +768,8 @@ ${enemyPokemon.name} has ${enemyHP} HP left.`
 /* ENEMY */
 function enemyNext(){
     enemyWaiting = true;
-
-    document.addEventListener("keydown", function handler(e){
-        if(e.key === "Enter"){
-            enemyWaiting = false;
-            enemyTurn();
-        }
-    }, {once:true});
 }
+
 
 function enemyTurn(){
     let move = 
