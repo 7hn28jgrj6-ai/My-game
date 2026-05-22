@@ -697,7 +697,16 @@ function back(){
 }
 
 function pokemon(){ setDialogue("No other Pokémon."); }
-function run(){ loseScreen.classList.add("active"); }
+function run() {
+
+    loseScreen.classList.add("active");
+
+    gameOver = true;
+    speechSynthesis.cancel();
+    speak("You lost the game!");
+
+    return;
+}
 
 function useShield(){
     if(shields <= 0){
